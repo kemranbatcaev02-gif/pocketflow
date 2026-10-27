@@ -10,7 +10,6 @@ import (
 	"github.com/kemranbatcaev02-gif/pocketflow/pkg/pocketflow"
 )
 
-// BenchmarkDAG_TopologicalSort measures graph resolution performance for 100-node DAGs.
 func BenchmarkDAG_TopologicalSort(b *testing.B) {
 	g := dag.NewGraph()
 	_ = g.AddNode("node_0")
@@ -29,7 +28,6 @@ func BenchmarkDAG_TopologicalSort(b *testing.B) {
 	}
 }
 
-// BenchmarkWorkflowExecution measures full durable execution speed with disk checkpoints.
 func BenchmarkWorkflowExecution(b *testing.B) {
 	dbPath := filepath.Join(b.TempDir(), "bench.db")
 	app, err := pocketflow.NewApp(dbPath)

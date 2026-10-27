@@ -45,7 +45,6 @@ func TestApp_FluentAPISuccess(t *testing.T) {
 		t.Errorf("expected COMPLETED, got %s", result.Status)
 	}
 
-	// Verify retrieval from DB
 	fetched, err := app.GetWorkflow(result.RunID)
 	if err != nil {
 		t.Fatalf("failed to fetch workflow: %v", err)

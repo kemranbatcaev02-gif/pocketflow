@@ -8,7 +8,6 @@ import (
 
 func TestGraph_LinearOrder(t *testing.T) {
 	g := NewGraph()
-	// A -> B -> C
 	_ = g.AddNode("A")
 	_ = g.AddNode("B", "A")
 	_ = g.AddNode("C", "B")
@@ -40,7 +39,6 @@ func TestGraph_LinearOrder(t *testing.T) {
 
 func TestGraph_DiamondParallelStages(t *testing.T) {
 	g := NewGraph()
-	// Start -> (Process1, Process2) -> Aggregator
 	_ = g.AddNode("Start")
 	_ = g.AddNode("Process1", "Start")
 	_ = g.AddNode("Process2", "Start")
@@ -63,7 +61,6 @@ func TestGraph_DiamondParallelStages(t *testing.T) {
 
 func TestGraph_CycleDetection(t *testing.T) {
 	g := NewGraph()
-	// A -> B -> C -> A
 	_ = g.AddNode("A", "C")
 	_ = g.AddNode("B", "A")
 	_ = g.AddNode("C", "B")
@@ -104,7 +101,6 @@ func TestGraph_MissingDependency(t *testing.T) {
 
 func TestGraph_DisjointParallelNodes(t *testing.T) {
 	g := NewGraph()
-	// Two independent pipelines: (A -> B) and (C -> D)
 	_ = g.AddNode("A")
 	_ = g.AddNode("B", "A")
 	_ = g.AddNode("C")

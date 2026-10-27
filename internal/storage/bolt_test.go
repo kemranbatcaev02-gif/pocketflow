@@ -27,12 +27,10 @@ func TestBoltStorage_WorkflowLifecycle(t *testing.T) {
 		StartedAt:  time.Now().UTC(),
 	}
 
-	// 1. Save workflow
 	if err := store.SaveWorkflow(wf); err != nil {
 		t.Fatalf("failed to save workflow: %v", err)
 	}
 
-	// 2. Retrieve workflow
 	retrieved, err := store.GetWorkflow("run-12345")
 	if err != nil {
 		t.Fatalf("failed to get workflow: %v", err)
@@ -41,13 +39,11 @@ func TestBoltStorage_WorkflowLifecycle(t *testing.T) {
 		t.Errorf("mismatched workflow data: got %+v, want %+v", retrieved, wf)
 	}
 
-	// 3. Not found test
 	_, err = store.GetWorkflow("non-existent")
 	if err != ErrNotFound {
 		t.Errorf("expected ErrNotFound, got %v", err)
 	}
 
-	// 4. Update workflow status
 	wf.Status = models.StatusCompleted
 	wf.CompletedAt = time.Now().UTC()
 	if err := store.SaveWorkflow(wf); err != nil {
@@ -59,7 +55,6 @@ func TestBoltStorage_WorkflowLifecycle(t *testing.T) {
 		t.Errorf("expected completed status, got %v", updated.Status)
 	}
 
-	// 5. List workflows
 	list, err := store.ListWorkflows(10)
 	if err != nil {
 		t.Fatalf("failed to list workflows: %v", err)
@@ -99,7 +94,6 @@ func TestBoltStorage_StepStates(t *testing.T) {
 		t.Fatalf("save step2 failed: %v", err)
 	}
 
-	// Get individual step
 	s1, err := store.GetStepState(runID, "step_one")
 	if err != nil {
 		t.Fatalf("get step1 failed: %v", err)
@@ -108,7 +102,6 @@ func TestBoltStorage_StepStates(t *testing.T) {
 		t.Errorf("expected status COMPLETED, got %v", s1.Status)
 	}
 
-	// List all steps for run
 	steps, err := store.ListStepStates(runID)
 	if err != nil {
 		t.Fatalf("list steps failed: %v", err)

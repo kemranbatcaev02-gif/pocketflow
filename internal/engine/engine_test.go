@@ -171,7 +171,6 @@ func TestEngine_ResumeSkipsCompletedSteps(t *testing.T) {
 
 	_ = eng.RegisterWorkflow("resume-test", steps)
 
-	// 1. Initial run: fails at step_2
 	wfState, err := eng.Run(context.Background(), "resume-test", nil)
 	if err == nil {
 		t.Fatal("expected run to fail, got nil")
@@ -183,7 +182,6 @@ func TestEngine_ResumeSkipsCompletedSteps(t *testing.T) {
 		t.Fatalf("run counts before resume: step1=%d, step2=%d", step1Runs, step2Runs)
 	}
 
-	// 2. Fix condition and resume workflow
 	atomic.StoreInt32(&shouldFailStep2, 0)
 	resumedState, err := eng.Resume(context.Background(), wfState.RunID)
 	if err != nil {
@@ -194,11 +192,9 @@ func TestEngine_ResumeSkipsCompletedSteps(t *testing.T) {
 		t.Errorf("expected COMPLETED status after resume, got %s", resumedState.Status)
 	}
 
-	// Step 1 MUST NOT be re-executed! It was already COMPLETED.
 	if atomic.LoadInt32(&step1Runs) != 1 {
 		t.Errorf("step 1 was re-executed during resume! got %d runs, want 1", step1Runs)
 	}
-	// Step 2 should have been executed a second time and succeeded
 	if atomic.LoadInt32(&step2Runs) != 2 {
 		t.Errorf("step 2 was not retried properly: got %d runs, want 2", step2Runs)
 	}
