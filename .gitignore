@@ -1,0 +1,22 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/pocketflow
+
+# Embedded databases
+*.db
+*.db-lock
+
+# Test artifacts & coverage
+*.out
+*.test
+*.prof
+
+# IDE & OS files
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db
