@@ -107,7 +107,8 @@ DAG dependency scheduling, and automatic retries.`,
 			defer app.Close()
 
 			fmt.Println(tui.RenderBanner())
-			fmt.Println("Executing 'order-fulfillment-pipeline' DAG with parallel branches...\n")
+			fmt.Println("Executing 'order-fulfillment-pipeline' DAG with parallel branches...")
+			fmt.Println()
 
 			// Define demo workflow
 			var flakyAttempts int
