@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/kemra/pocketflow/internal/tui"
-	"github.com/kemra/pocketflow/pkg/pocketflow"
+	"github.com/kemranbatcaev02-gif/pocketflow/internal/tui"
+	"github.com/kemranbatcaev02-gif/pocketflow/pkg/pocketflow"
 	"github.com/spf13/cobra"
 )
 
@@ -20,24 +20,22 @@ var (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "pocketflow",
-		Short: "PocketFlow — Durable, embedded workflow & task orchestration engine",
-		Long: `PocketFlow is a lightweight, zero-dependency durable execution engine.
+		Short: "PocketFlow — Durable embedded workflow engine",
+		Long: `PocketFlow is a zero-dependency durable execution engine.
 It guarantees task execution across restarts with an embedded database,
 DAG dependency scheduling, and automatic retries.`,
 	}
 
 	rootCmd.PersistentFlags().StringVar(&dbPath, "db", "pocketflow.db", "Path to embedded database file")
 
-	// 1. Version command
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print PocketFlow version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("PocketFlow v%s (built with %s)\n", version, "Go 1.27")
+			fmt.Printf("PocketFlow v%s\n", version)
 		},
 	}
 
-	// 2. List command
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List recent workflow runs",
@@ -73,10 +71,9 @@ DAG dependency scheduling, and automatic retries.`,
 		},
 	}
 
-	// 3. Status command
 	statusCmd := &cobra.Command{
 		Use:   "status <run-id>",
-		Short: "Inspect a specific workflow execution",
+		Short: "Inspect a workflow execution",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			app, err := pocketflow.NewApp(dbPath)
@@ -95,10 +92,9 @@ DAG dependency scheduling, and automatic retries.`,
 		},
 	}
 
-	// 4. Demo command: runs an interactive real-world eCommerce DAG workflow
 	demoCmd := &cobra.Command{
 		Use:   "demo",
-		Short: "Run an interactive eCommerce demo pipeline with retries and DAG branches",
+		Short: "Run an interactive pipeline demo",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			app, err := pocketflow.NewApp(dbPath)
 			if err != nil {
@@ -110,7 +106,6 @@ DAG dependency scheduling, and automatic retries.`,
 			fmt.Println("Executing 'order-fulfillment-pipeline' DAG with parallel branches...")
 			fmt.Println()
 
-			// Define demo workflow
 			var flakyAttempts int
 			err = app.Workflow("order-fulfillment-pipeline").
 				Step("validate_cart", func(ctx *pocketflow.StepContext) (any, error) {
@@ -149,7 +144,6 @@ DAG dependency scheduling, and automatic retries.`,
 				fmt.Printf("Execution failed: %v\n", err)
 			}
 
-			// Render summary
 			summary, err := app.GetWorkflow(result.RunID)
 			if err == nil {
 				fmt.Println(tui.RenderWorkflowSummary(summary))

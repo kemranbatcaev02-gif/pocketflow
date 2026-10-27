@@ -1,4 +1,4 @@
-module github.com/kemra/pocketflow
+module github.com/kemranbatcaev02-gif/pocketflow
 
 go 1.27.0
 

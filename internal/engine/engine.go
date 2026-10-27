@@ -8,15 +8,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kemra/pocketflow/internal/dag"
-	"github.com/kemra/pocketflow/internal/models"
-	"github.com/kemra/pocketflow/internal/storage"
+	"github.com/kemranbatcaev02-gif/pocketflow/internal/dag"
+	"github.com/kemranbatcaev02-gif/pocketflow/internal/models"
+	"github.com/kemranbatcaev02-gif/pocketflow/internal/storage"
 )
 
-// StepHandler is the function signature executed by each workflow step.
 type StepHandler func(ctx *models.StepContext) (any, error)
 
-// StepConfig defines configuration and execution logic for a single step.
 type StepConfig struct {
 	Name         string
 	Handler      StepHandler
@@ -25,14 +23,12 @@ type StepConfig struct {
 	Timeout      time.Duration
 }
 
-// WorkflowDefinition contains registered workflow configuration and its validated DAG.
 type WorkflowDefinition struct {
 	ID    string
 	Steps map[string]*StepConfig
 	Graph *dag.Graph
 }
 
-// EngineCallbacks allows hooking into step and workflow lifecycle events.
 type EngineCallbacks struct {
 	OnStepStarted   func(runID, stepName string)
 	OnStepCompleted func(runID, stepName string, duration time.Duration)
@@ -40,7 +36,6 @@ type EngineCallbacks struct {
 	OnStepRetrying  func(runID, stepName string, attempt int, backoff time.Duration)
 }
 
-// Engine orchestrates DAG workflows, handles worker concurrency and ensures state durability.
 type Engine struct {
 	storage     storage.Storage
 	concurrency int
@@ -49,10 +44,8 @@ type Engine struct {
 	mu          sync.RWMutex
 }
 
-// Option configures the Engine.
 type Option func(*Engine)
 
-// WithConcurrency limits the maximum number of concurrent steps across executions.
 func WithConcurrency(limit int) Option {
 	return func(e *Engine) {
 		if limit > 0 {
@@ -61,18 +54,16 @@ func WithConcurrency(limit int) Option {
 	}
 }
 
-// WithCallbacks attaches event hooks to the engine.
 func WithCallbacks(cb EngineCallbacks) Option {
 	return func(e *Engine) {
 		e.callbacks = cb
 	}
 }
 
-// NewEngine initializes an Engine with the provided persistence storage.
 func NewEngine(store storage.Storage, opts ...Option) *Engine {
 	e := &Engine{
 		storage:     store,
-		concurrency: 8, // default worker concurrency
+		concurrency: 8,
 		workflows:   make(map[string]*WorkflowDefinition),
 	}
 	for _, opt := range opts {
@@ -81,7 +72,6 @@ func NewEngine(store storage.Storage, opts ...Option) *Engine {
 	return e
 }
 
-// RegisterWorkflow adds a workflow definition and validates its dependency graph.
 func (e *Engine) RegisterWorkflow(id string, steps []*StepConfig) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -122,7 +112,6 @@ func (e *Engine) RegisterWorkflow(id string, steps []*StepConfig) error {
 	return nil
 }
 
-// Run executes a registered workflow from the beginning.
 func (e *Engine) Run(ctx context.Context, workflowID string, initialInputs map[string]any) (*models.WorkflowState, error) {
 	e.mu.RLock()
 	def, exists := e.workflows[workflowID]
@@ -144,7 +133,6 @@ func (e *Engine) Run(ctx context.Context, workflowID string, initialInputs map[s
 		StepStates: make(map[string]*models.StepState),
 	}
 
-	// Prepare initial step states
 	for name, cfg := range def.Steps {
 		stepState := &models.StepState{
 			StepName:   name,
@@ -162,7 +150,6 @@ func (e *Engine) Run(ctx context.Context, workflowID string, initialInputs map[s
 	return e.executeWorkflow(ctx, def, wfState, initialInputs)
 }
 
-// Resume re-executes an interrupted or failed workflow run, skipping already completed steps.
 func (e *Engine) Resume(ctx context.Context, runID string) (*models.WorkflowState, error) {
 	wfState, err := e.storage.GetWorkflow(runID)
 	if err != nil {
@@ -177,7 +164,6 @@ func (e *Engine) Resume(ctx context.Context, runID string) (*models.WorkflowStat
 		return nil, fmt.Errorf("workflow %q is not registered", wfState.WorkflowID)
 	}
 
-	// Populate latest step states from storage
 	stepList, err := e.storage.ListStepStates(runID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load step states: %w", err)
@@ -194,7 +180,6 @@ func (e *Engine) Resume(ctx context.Context, runID string) (*models.WorkflowStat
 	return e.executeWorkflow(ctx, def, wfState, nil)
 }
 
-// executeWorkflow carries out stage-by-stage execution.
 func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, wfState *models.WorkflowState, initialInputs map[string]any) (*models.WorkflowState, error) {
 	stages, err := def.Graph.ComputeStages()
 	if err != nil {
@@ -205,14 +190,12 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 	completedOutputs := make(map[string]json.RawMessage)
 	var outputMu sync.RWMutex
 
-	// Pre-fill outputs from already completed steps (e.g. during Resume)
 	for name, s := range wfState.StepStates {
 		if s.Status == models.StatusCompleted && len(s.Output) > 0 {
 			completedOutputs[name] = s.Output
 		}
 	}
 
-	// Pre-fill initial inputs if provided
 	for k, v := range initialInputs {
 		raw, err := json.Marshal(v)
 		if err == nil {
@@ -228,7 +211,6 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 			stepCfg := def.Steps[stepName]
 			stepState := wfState.StepStates[stepName]
 
-			// Skip steps that were already completed in previous runs
 			if stepState.Status == models.StatusCompleted {
 				continue
 			}
@@ -237,7 +219,6 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 			go func(name string, cfg *StepConfig, st *models.StepState) {
 				defer wg.Done()
 
-				// Acquire worker slot
 				select {
 				case sem <- struct{}{}:
 					defer func() { <-sem }()
@@ -246,7 +227,6 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 					return
 				}
 
-				// Prepare inputs from upstream dependencies
 				outputMu.RLock()
 				inputs := make(map[string]json.RawMessage)
 				for _, dep := range cfg.Dependencies {
@@ -271,7 +251,6 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 		wg.Wait()
 		close(stageErrChan)
 
-		// Check if any step in this stage failed
 		var firstErr error
 		for err := range stageErrChan {
 			if firstErr == nil {
@@ -280,7 +259,6 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 		}
 
 		if firstErr != nil {
-			// Mark remaining uncompleted steps as SKIPPED
 			for _, st := range wfState.StepStates {
 				if st.Status == models.StatusPending {
 					st.Status = models.StatusSkipped
@@ -296,7 +274,6 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 		}
 	}
 
-	// All stages succeeded
 	wfState.Status = models.StatusCompleted
 	wfState.CompletedAt = time.Now().UTC()
 	_ = e.storage.SaveWorkflow(wfState)
@@ -304,7 +281,6 @@ func (e *Engine) executeWorkflow(ctx context.Context, def *WorkflowDefinition, w
 	return wfState, nil
 }
 
-// executeStepWithRetry handles attempt counts, backoff delay, and timeout context for a single step.
 func (e *Engine) executeStepWithRetry(ctx context.Context, runID string, cfg *StepConfig, st *models.StepState, inputs map[string]json.RawMessage) error {
 	policy := cfg.RetryPolicy
 	if policy.MaxRetries <= 0 {
@@ -350,7 +326,6 @@ func (e *Engine) executeStepWithRetry(ctx context.Context, runID string, cfg *St
 			return nil
 		}
 
-		// Handle failure & retry
 		st.Error = err.Error()
 
 		if st.Attempt >= policy.MaxRetries || ctx.Err() != nil {
@@ -364,7 +339,6 @@ func (e *Engine) executeStepWithRetry(ctx context.Context, runID string, cfg *St
 			return err
 		}
 
-		// Calculate backoff before retry
 		backoff := ComputeBackoff(st.Attempt, policy)
 		st.Status = models.StatusRetrying
 		_ = e.storage.SaveStepState(runID, st)

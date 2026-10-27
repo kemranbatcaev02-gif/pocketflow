@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// Status represents the execution status of a step or workflow.
 type Status string
 
 const (
@@ -18,12 +17,10 @@ const (
 	StatusCanceled  Status = "CANCELED"
 )
 
-// IsTerminal returns true if the status represents a final state.
 func (s Status) IsTerminal() bool {
 	return s == StatusCompleted || s == StatusFailed || s == StatusSkipped || s == StatusCanceled
 }
 
-// RetryPolicy defines how failed steps should be retried.
 type RetryPolicy struct {
 	MaxRetries      int           `json:"max_retries"`
 	InitialInterval time.Duration `json:"initial_interval"`
@@ -31,7 +28,6 @@ type RetryPolicy struct {
 	Multiplier      float64       `json:"multiplier"`
 }
 
-// DefaultRetryPolicy returns a sensible default retry configuration.
 func DefaultRetryPolicy() RetryPolicy {
 	return RetryPolicy{
 		MaxRetries:      3,
@@ -41,7 +37,6 @@ func DefaultRetryPolicy() RetryPolicy {
 	}
 }
 
-// StepState holds execution metadata and checkpoint data for a specific step.
 type StepState struct {
 	StepName    string          `json:"step_name"`
 	Status      Status          `json:"status"`
@@ -54,7 +49,6 @@ type StepState struct {
 	CompletedAt time.Time       `json:"completed_at,omitempty"`
 }
 
-// WorkflowState represents the state of a single execution of a workflow.
 type WorkflowState struct {
 	WorkflowID  string                `json:"workflow_id"`
 	RunID       string                `json:"run_id"`

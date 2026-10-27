@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kemra/pocketflow/internal/dag"
-	"github.com/kemra/pocketflow/pkg/pocketflow"
+	"github.com/kemranbatcaev02-gif/pocketflow/internal/dag"
+	"github.com/kemranbatcaev02-gif/pocketflow/pkg/pocketflow"
 )
 
 // BenchmarkDAG_TopologicalSort measures graph resolution performance for 100-node DAGs.

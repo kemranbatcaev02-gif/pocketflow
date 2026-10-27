@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kemra/pocketflow/internal/models"
+	"github.com/kemranbatcaev02-gif/pocketflow/internal/models"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -17,12 +17,10 @@ var (
 	bucketStepStates = []byte("step_states")
 )
 
-// BoltStorage implements Storage using the pure-Go embedded bbolt engine.
 type BoltStorage struct {
 	db *bolt.DB
 }
 
-// NewBoltStorage opens or creates a bbolt database at the given path.
 func NewBoltStorage(dbPath string) (*BoltStorage, error) {
 	if dir := filepath.Dir(dbPath); dir != "." && dir != "" {
 		if err := os.MkdirAll(dir, 0755); err != nil {
@@ -39,7 +37,6 @@ func NewBoltStorage(dbPath string) (*BoltStorage, error) {
 		return nil, fmt.Errorf("failed to open bbolt database at %s: %w", dbPath, err)
 	}
 
-	// Initialize buckets
 	err = db.Update(func(tx *bolt.Tx) error {
 		if _, err := tx.CreateBucketIfNotExists(bucketWorkflows); err != nil {
 			return fmt.Errorf("create bucket workflows: %w", err)
@@ -57,7 +54,6 @@ func NewBoltStorage(dbPath string) (*BoltStorage, error) {
 	return &BoltStorage{db: db}, nil
 }
 
-// SaveWorkflow persists the workflow state.
 func (s *BoltStorage) SaveWorkflow(state *models.WorkflowState) error {
 	if state == nil || state.RunID == "" {
 		return fmt.Errorf("invalid workflow state: missing run_id")
@@ -74,7 +70,6 @@ func (s *BoltStorage) SaveWorkflow(state *models.WorkflowState) error {
 	})
 }
 
-// GetWorkflow retrieves the workflow state by run ID.
 func (s *BoltStorage) GetWorkflow(runID string) (*models.WorkflowState, error) {
 	var state models.WorkflowState
 
@@ -93,7 +88,6 @@ func (s *BoltStorage) GetWorkflow(runID string) (*models.WorkflowState, error) {
 	return &state, nil
 }
 
-// ListWorkflows retrieves up to limit workflows, ordered from newest to oldest.
 func (s *BoltStorage) ListWorkflows(limit int) ([]*models.WorkflowState, error) {
 	var list []*models.WorkflowState
 
@@ -124,7 +118,6 @@ func makeStepKey(runID, stepName string) []byte {
 	return []byte(fmt.Sprintf("%s:%s", runID, stepName))
 }
 
-// SaveStepState persists an individual step checkpoint.
 func (s *BoltStorage) SaveStepState(runID string, step *models.StepState) error {
 	if runID == "" || step == nil || step.StepName == "" {
 		return fmt.Errorf("invalid step state or run_id")
@@ -142,7 +135,6 @@ func (s *BoltStorage) SaveStepState(runID string, step *models.StepState) error 
 	})
 }
 
-// GetStepState retrieves a step's state by run ID and step name.
 func (s *BoltStorage) GetStepState(runID string, stepName string) (*models.StepState, error) {
 	var step models.StepState
 	key := makeStepKey(runID, stepName)
@@ -162,7 +154,6 @@ func (s *BoltStorage) GetStepState(runID string, stepName string) (*models.StepS
 	return &step, nil
 }
 
-// ListStepStates returns all step states for a given run ID.
 func (s *BoltStorage) ListStepStates(runID string) ([]*models.StepState, error) {
 	prefix := []byte(runID + ":")
 	var steps []*models.StepState
@@ -187,7 +178,6 @@ func (s *BoltStorage) ListStepStates(runID string) ([]*models.StepState, error) 
 	return steps, nil
 }
 
-// Close flushes buffers and closes the bbolt database.
 func (s *BoltStorage) Close() error {
 	if s.db == nil {
 		return nil

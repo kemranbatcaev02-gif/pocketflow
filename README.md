@@ -10,7 +10,7 @@
 
 ### ⚡ Embedded, Zero-Dependency Durable Workflow Engine for Go
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/kemra/pocketflow)](https://goreportcard.com/report/github.com/kemra/pocketflow)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kemranbatcaev02-gif/pocketflow)](https://goreportcard.com/report/github.com/kemranbatcaev02-gif/pocketflow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://golang.org)
 [![Zero CGO](https://img.shields.io/badge/CGO-Zero-brightgreen.svg)]()
@@ -65,7 +65,7 @@ Heavy orchestrators like **Temporal**, **Cadence**, or **Apache Airflow** are po
 ### 1. Installation
 
 ```bash
-go get github.com/kemra/pocketflow@latest
+go get github.com/kemranbatcaev02-gif/pocketflow@latest
 ```
 
 ### 2. Define and Run a Workflow
@@ -78,8 +78,8 @@ import (
     "fmt"
     "time"
 
-    "github.com/kemra/pocketflow/internal/tui"
-    "github.com/kemra/pocketflow/pkg/pocketflow"
+    "github.com/kemranbatcaev02-gif/pocketflow/internal/tui"
+    "github.com/kemranbatcaev02-gif/pocketflow/pkg/pocketflow"
 )
 
 func main() {

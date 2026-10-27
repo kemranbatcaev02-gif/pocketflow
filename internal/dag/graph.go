@@ -6,26 +6,22 @@ import (
 	"strings"
 )
 
-// Node represents a vertex in the DAG.
 type Node struct {
 	Name         string
-	Dependencies []string // Upstream steps that must complete before this node
-	Dependents   []string // Downstream steps that wait for this node
+	Dependencies []string
+	Dependents   []string
 }
 
-// Graph represents a directed acyclic graph of execution steps.
 type Graph struct {
 	nodes map[string]*Node
 }
 
-// NewGraph initializes an empty Graph.
 func NewGraph() *Graph {
 	return &Graph{
 		nodes: make(map[string]*Node),
 	}
 }
 
-// AddNode adds a step with optional dependencies to the graph.
 func (g *Graph) AddNode(name string, dependencies ...string) error {
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -60,9 +56,7 @@ func (g *Graph) AddNode(name string, dependencies ...string) error {
 	return nil
 }
 
-// Validate checks for non-existent dependencies and cycles in the graph.
 func (g *Graph) Validate() error {
-	// 1. Ensure all declared dependencies exist as registered nodes
 	for name, node := range g.nodes {
 		for _, dep := range node.Dependencies {
 			if _, exists := g.nodes[dep]; !exists {
@@ -71,7 +65,6 @@ func (g *Graph) Validate() error {
 		}
 	}
 
-	// 2. Rebuild dependents (adjacency list)
 	for _, node := range g.nodes {
 		node.Dependents = nil
 	}
@@ -81,18 +74,16 @@ func (g *Graph) Validate() error {
 		}
 	}
 
-	// 3. Cycle detection using 3-color DFS (0: White/Unvisited, 1: Gray/Visiting, 2: Black/Visited)
 	color := make(map[string]int)
 	path := make([]string, 0)
 
 	var detectCycle func(curr string) error
 	detectCycle = func(curr string) error {
-		color[curr] = 1 // Gray: currently in recursion stack
+		color[curr] = 1
 		path = append(path, curr)
 
 		for _, dep := range g.nodes[curr].Dependencies {
 			if color[dep] == 1 {
-				// Cycle detected: extract cycle path for clear error message
 				cycleStart := 0
 				for i, n := range path {
 					if n == dep {
@@ -111,7 +102,7 @@ func (g *Graph) Validate() error {
 		}
 
 		path = path[:len(path)-1]
-		color[curr] = 2 // Black: fully explored
+		color[curr] = 2
 		return nil
 	}
 
@@ -126,7 +117,6 @@ func (g *Graph) Validate() error {
 	return nil
 }
 
-// TopologicalSort returns a valid sequential execution order using Kahn's algorithm.
 func (g *Graph) TopologicalSort() ([]string, error) {
 	if err := g.Validate(); err != nil {
 		return nil, err
@@ -143,7 +133,7 @@ func (g *Graph) TopologicalSort() ([]string, error) {
 			queue = append(queue, name)
 		}
 	}
-	sort.Strings(queue) // Deterministic order
+	sort.Strings(queue)
 
 	var order []string
 	for len(queue) > 0 {
@@ -167,9 +157,6 @@ func (g *Graph) TopologicalSort() ([]string, error) {
 	return order, nil
 }
 
-// ComputeStages groups nodes into parallel execution tiers.
-// Nodes in each stage have all their dependencies satisfied by previous stages
-// and can safely be executed in parallel.
 func (g *Graph) ComputeStages() ([][]string, error) {
 	if err := g.Validate(); err != nil {
 		return nil, err
@@ -216,7 +203,6 @@ func (g *Graph) ComputeStages() ([][]string, error) {
 	return stages, nil
 }
 
-// GetDependencies returns the list of steps that must finish before this step.
 func (g *Graph) GetDependencies(name string) ([]string, error) {
 	node, exists := g.nodes[name]
 	if !exists {
@@ -227,7 +213,6 @@ func (g *Graph) GetDependencies(name string) ([]string, error) {
 	return deps, nil
 }
 
-// GetDependents returns the list of steps waiting for this step to finish.
 func (g *Graph) GetDependents(name string) ([]string, error) {
 	node, exists := g.nodes[name]
 	if !exists {
@@ -238,7 +223,6 @@ func (g *Graph) GetDependents(name string) ([]string, error) {
 	return deps, nil
 }
 
-// NodeCount returns the total number of nodes in the graph.
 func (g *Graph) NodeCount() int {
 	return len(g.nodes)
 }

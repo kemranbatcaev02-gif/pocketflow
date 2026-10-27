@@ -8,9 +8,6 @@ import (
 	"time"
 )
 
-// StepContext is passed to each step's execution handler.
-// It provides access to workflow metadata, cancellation signals,
-// and outputs produced by previous upstream steps.
 type StepContext struct {
 	context.Context
 	WorkflowID string
@@ -24,7 +21,6 @@ type StepContext struct {
 	logs    []string
 }
 
-// NewStepContext creates an initialized StepContext.
 func NewStepContext(ctx context.Context, workflowID, runID, stepName string, attempt int, inputs map[string]json.RawMessage) *StepContext {
 	if ctx == nil {
 		ctx = context.Background()
@@ -43,7 +39,6 @@ func NewStepContext(ctx context.Context, workflowID, runID, stepName string, att
 	}
 }
 
-// GetInput returns the raw output of an upstream step.
 func (sc *StepContext) GetInput(stepName string) (json.RawMessage, bool) {
 	sc.mu.RLock()
 	defer sc.mu.RUnlock()
@@ -51,7 +46,6 @@ func (sc *StepContext) GetInput(stepName string) (json.RawMessage, bool) {
 	return val, ok
 }
 
-// BindInput deserializes the output of an upstream step into target.
 func (sc *StepContext) BindInput(stepName string, target any) error {
 	sc.mu.RLock()
 	defer sc.mu.RUnlock()
@@ -63,21 +57,18 @@ func (sc *StepContext) BindInput(stepName string, target any) error {
 	return json.Unmarshal(val, target)
 }
 
-// SetOutput sets the step's result payload.
 func (sc *StepContext) SetOutput(output any) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	sc.outputs = output
 }
 
-// GetOutput returns the output set by this step.
 func (sc *StepContext) GetOutput() any {
 	sc.mu.RLock()
 	defer sc.mu.RUnlock()
 	return sc.outputs
 }
 
-// Logf records an execution log line with timestamp.
 func (sc *StepContext) Logf(format string, args ...any) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
@@ -85,7 +76,6 @@ func (sc *StepContext) Logf(format string, args ...any) {
 	sc.logs = append(sc.logs, msg)
 }
 
-// GetLogs returns all recorded log messages for this step.
 func (sc *StepContext) GetLogs() []string {
 	sc.mu.RLock()
 	defer sc.mu.RUnlock()
